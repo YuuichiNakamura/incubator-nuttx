@@ -45,6 +45,7 @@
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
 #include <nuttx/sched_note.h>
+#include <nuttx/sched_tracer.h>
 #include <nuttx/serial/pty.h>
 #include <nuttx/syslog/syslog_console.h>
 #include <nuttx/drivers/drivers.h>
@@ -148,6 +149,11 @@ void up_initialize(void)
 #if defined(CONFIG_SCHED_INSTRUMENTATION_BUFFER) && \
     defined(CONFIG_DRIVER_NOTE)
   note_register();    /* Non-standard /dev/note */
+#endif
+
+#if defined(CONFIG_SCHED_INSTRUMENTATION_TRACER) && \
+    defined(CONFIG_DRIVER_TRACER)
+  tracer_register();    /* Non-standard /dev/tracer */
 #endif
 
   /* Initialize the serial device driver */
