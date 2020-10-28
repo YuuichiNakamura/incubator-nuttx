@@ -38,6 +38,8 @@
  * Private Function Prototypes
  ****************************************************************************/
 
+static ssize_t notectl_write(FAR struct file *filep, FAR const char *buffer,
+                             size_t buflen);
 static int notectl_ioctl(struct file *filep, int cmd, unsigned long arg);
 
 /****************************************************************************
@@ -49,7 +51,7 @@ static const struct file_operations notectl_fops =
   NULL,          /* open */
   NULL,          /* close */
   NULL,          /* read */
-  NULL,          /* write */
+  notectl_write, /* write */
   NULL,          /* seek */
   notectl_ioctl, /* ioctl */
   NULL           /* poll */
@@ -61,6 +63,46 @@ static const struct file_operations notectl_fops =
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: note_write
+ ****************************************************************************/
+
+static ssize_t notectl_write(FAR struct file *filep, FAR const char *buffer,
+                             size_t buflen)
+{
+  char msg[UCHAR_MAX];
+  char *msgp = msg;
+  size_t msglen = 0;
+  const char *bufp;
+  size_t len;
+
+  for (bufp = buffer, len = buflen; len > 0; bufp++, len--)
+    {
+      if (*bufp != '\n')
+        {
+          /* Copy the given message strings into the buffer */
+
+          if (msglen < sizeof msg - 1)
+            {
+              *msgp = *bufp;
+              msgp++;
+              msglen++;
+            }
+        }
+      else
+        {
+          /* Record the buffer as the user message trace events */
+
+          *msgp = '\0';
+          sched_note_message("%s", msg);
+          msgp = msg;
+          msglen = 0;
+        }
+    }
+
+  return buflen;
+}
 
 /****************************************************************************
  * Name: notectl_ioctl

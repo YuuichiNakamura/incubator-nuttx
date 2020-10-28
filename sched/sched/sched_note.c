@@ -25,6 +25,7 @@
 #include <nuttx/config.h>
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
@@ -797,6 +798,47 @@ void sched_note_irqhandler(int irq, FAR void *handler, bool enter)
                  sizeof(struct note_irqhandler_s));
 }
 #endif
+
+/****************************************************************************
+ * Name: sched_note_message
+ *
+ * Description:
+ *   Record the user provided message as the note.
+ *
+ * Input Parameters:
+ *   fmt - printf() style format string
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+void sched_note_message(FAR const char *fmt, ...)
+{
+  struct note_message_s note;
+  FAR struct tcb_s *tcb = this_task();
+  unsigned int length;
+  va_list ap;
+
+  if (!note_isenabled())
+    {
+      return;
+    }
+
+  va_start(ap, fmt);
+  vsnprintf(note.nms_mesg, sizeof note.nms_mesg, fmt, ap);
+  va_end(ap);
+
+  length = SIZEOF_NOTE_MESSAGE(strlen(note.nms_mesg) + 1);
+
+  /* Finish formatting the note */
+
+  note_common(tcb, &note.nms_cmn, length, NOTE_MESSAGE);
+
+  /* Add the note to circular buffer */
+
+  sched_note_add((FAR const uint8_t *)&note, length);
+}
 
 #ifdef CONFIG_SCHED_INSTRUMENTATION_FILTER
 

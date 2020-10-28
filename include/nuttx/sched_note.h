@@ -147,6 +147,8 @@ enum note_type_e
   NOTE_IRQ_ENTER       = 20,
   NOTE_IRQ_LEAVE       = 21
 #endif
+  ,
+  NOTE_MESSAGE         = 22
 };
 
 /* This structure provides the common header of each note */
@@ -319,6 +321,16 @@ struct note_irqhandler_s
 };
 #endif /* CONFIG_SCHED_INSTRUMENTATION_IRQHANDLER */
 
+/* This is the specific form of the NOTE_MESSAGE notes */
+
+#define SIZEOF_NOTE_MESSAGE(n) (sizeof(struct note_common_s) + (n))
+
+struct note_message_s
+{
+  struct note_common_s nms_cmn;                            /* Common note parameters */
+  char nms_mesg[UCHAR_MAX - sizeof(struct note_common_s)]; /* Message string */
+};
+
 #ifdef CONFIG_SCHED_INSTRUMENTATION_FILTER
 
 /* This is the type of the argument passed to the NOTECTL_GETMODE and
@@ -439,6 +451,8 @@ void sched_note_irqhandler(int irq, FAR void *handler, bool enter);
 #else
 #  define sched_note_irqhandler(i,h,e)
 #endif
+
+void sched_note_message(FAR const char *fmt, ...);
 
 #if defined(__KERNEL__) || defined(CONFIG_BUILD_FLAT)
 
@@ -562,6 +576,7 @@ void sched_note_filter_irq(struct note_filter_irq_s *oldf,
 #  define sched_note_syscall_enter(n,a...)
 #  define sched_note_syscall_leave(n,r)
 #  define sched_note_irqhandler(i,h,e)
+#  define sched_note_message(f...)
 
 #endif /* CONFIG_SCHED_INSTRUMENTATION */
 #endif /* __INCLUDE_NUTTX_SCHED_NOTE_H */
