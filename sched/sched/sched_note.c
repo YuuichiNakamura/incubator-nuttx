@@ -780,6 +780,17 @@ void sched_note_irqhandler(int irq, FAR void *handler, bool enter)
   DEBUGASSERT(irq <= UCHAR_MAX);
   note.nih_irq = irq;
 
+  note.nih_handler[0] = (uint8_t)((uintptr_t)handler & 0xff);
+  note.nih_handler[1] = (uint8_t)(((uintptr_t)handler >> 8)  & 0xff);
+  note.nih_handler[2] = (uint8_t)(((uintptr_t)handler >> 16) & 0xff);
+  note.nih_handler[3] = (uint8_t)(((uintptr_t)handler >> 24) & 0xff);
+#if UINTPTR_MAX > UINT32_MAX
+  note.nih_handler[4] = (uint8_t)(((uintptr_t)handler >> 32) & 0xff);
+  note.nih_handler[5] = (uint8_t)(((uintptr_t)handler >> 40) & 0xff);
+  note.nih_handler[6] = (uint8_t)(((uintptr_t)handler >> 48) & 0xff);
+  note.nih_handler[7] = (uint8_t)(((uintptr_t)handler >> 56) & 0xff);
+#endif
+
   /* Add the note to circular buffer */
 
   sched_note_add((FAR const uint8_t *)&note,
